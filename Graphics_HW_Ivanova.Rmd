@@ -1,0 +1,411 @@
+---
+title: "HW_Visualization"
+author: "Ivanova Ekaterina"
+date: '2022-10-20'
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = "pictures/pic_")
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+library(dplyr)
+#install.packages("skimr")
+library(skimr)
+library(ggplot2)
+#install.packages('ggpubr')
+library(ggpubr)
+library(dplyr)
+
+
+```
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+
+
+```{r task 1, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+cost <- read.csv("insurance_cost.csv")
+head(cost)
+str(cost)
+skim(cost)
+
+```
+
+
+```{r task 2, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+hist1 <- ggplot(data = cost, 
+       aes(x = age)) +
+  geom_histogram(binwidth=3, fill="#69b3a2", color="#e9ecef")
+
+
+hist2 <- ggplot(data = cost, 
+       aes(x = bmi)) +
+  geom_histogram(binwidth=3, fill="#404080", color="#e9ecef")
+
+
+hist3 <- ggplot(data = cost, 
+       aes(x = children)) +
+  geom_histogram(binwidth=1, fill="#7CAE00", color="#e9ecef")
+
+
+hist4 <- ggplot(data = cost, 
+       aes(x = charges)) +
+  geom_histogram(fill="#00BFC4", color="#e9ecef")
+
+
+combine_plot_task2 <- ggarrange(hist1, hist2, hist3, hist4,
+                          ncol = 1, nrow = 4) 
+ 
+combine_plot_task2
+
+ggsave(
+  plot = combine_plot_task2, 
+  "task2.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+```
+
+
+```{r task 3, echo=FALSE, warning = FALSE}
+
+charges_mean <- round(mean(cost$charges),1)
+charges_median <- round(median(cost$charges),1)
+
+dens_plot <- ggplot(data = cost, 
+       aes(x = charges)) +
+  geom_density()+
+  geom_vline(aes(xintercept = charges_mean), color="red") +
+  annotate("text", 
+           x= charges_mean+8000, 
+           y=0.00006, 
+           label=paste0("Mean=", charges_mean), color="red") +
+  geom_vline(aes(xintercept = charges_median), color="blue") +
+  annotate("text", 
+           x= 4700, 
+           y=0.000062, 
+           label=paste0("Median=", charges_median), color="blue") +
+  labs(x = "Расходы страховой компании на здоровье застрахованного", y = "Плотность") +
+  theme_bw()
+
+dens_plot
+
+ggsave(
+  plot = dens_plot, 
+  "task3.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+
+
+```
+
+
+```{r task 4, echo=FALSE, results='hide',fig.keep='all', warning = FALSE}
+
+
+box1 <- ggplot() +
+  geom_boxplot(data = cost, 
+               aes(x = smoker, y = charges)) +
+  labs(x = "Статус курения", y = "Расходы страховой") +
+  theme_bw()
+
+
+box2 <- ggplot() +
+  geom_boxplot(data = cost, 
+               aes(x = sex, y = charges)) +
+  labs(x = "Пол", y = "Расходы страховой") +
+  theme_bw()
+
+
+box3 <- ggplot() +
+  geom_boxplot(data = cost, 
+               aes(x = region, y = charges)) +
+  labs(x = "Регион", y = "Расходы страховой ") +
+  theme_bw()
+
+combine_plot_task4 <- ggarrange(box1, box2, box3,
+                          ncol = 1, nrow = 3) 
+ 
+combine_plot_task4
+
+ggsave(
+  plot = combine_plot_task4, 
+  "task4.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+
+```
+
+
+
+```{r task 5, echo=FALSE, results='hide',fig.keep='all', warning = FALSE}
+
+
+dens1 <- ggplot(data = cost, 
+       aes(x = charges)) +
+  geom_density()+
+  geom_vline(aes(xintercept = charges_mean), color="red") +
+  annotate("text", 
+           x= charges_mean+8000, 
+           y=0.00006, 
+           label=paste0("Mean=", charges_mean), color="red") +
+  geom_vline(aes(xintercept = charges_median), color="blue") +
+  annotate("text", 
+           x= 4700, 
+           y=0.000062, 
+           label=paste0("Median=", charges_median), color="blue") +
+  labs(x = "Расходы страховой", y = "Плотность")
+
+
+
+
+box1 <- ggplot() +
+  geom_boxplot(data = cost, 
+               aes(x = smoker, y = charges)) +
+  labs(x = "Статус курения", y = "Расходы страховой")
+ 
+
+
+box2 <- ggplot() +
+  geom_boxplot(data = cost, 
+               aes(x = sex, y = charges)) +
+  labs(x = "Пол", y = "Расходы страховой")
+  
+
+
+box3 <- ggplot() +
+  geom_boxplot(data = cost, 
+               aes(x = region, y = charges)) +
+  labs(x = "Регион", y = "Расходы страховой") +
+  scale_x_discrete(guide = guide_axis(angle = 90))
+ 
+
+combine_plot1 <- ggarrange( box1, box2, box3,
+                          ncol = 3, nrow = 1)  
+
+
+combine_plot <- ggarrange(dens1, combine_plot1,
+                          ncol = 1, nrow = 2) 
+
+combine_plot <- annotate_figure(combine_plot, top = text_grob("Описательная статистика расходов страховой", 
+               face = "bold", size = 12))
+ 
+
+combine_plot
+
+ggsave(
+  plot = combine_plot, 
+  "task5.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+```
+
+
+
+```{r task 6, echo=FALSE, results='hide',fig.keep='all', warning = FALSE}
+
+charges_mean <- round(mean(cost$charges),1)
+charges_median <- round(median(cost$charges),1)
+
+facet_plot <- ggplot(data = cost, 
+       aes(x = charges, color = region, fill = region, group = region, alpha = 0.5)) +
+  geom_density(alpha = 0.5)+
+  geom_vline(aes(xintercept = charges_mean), color="red") +
+  annotate("text", 
+           x= charges_mean+15000, 
+           y=0.000061, 
+           label=paste0("Mean=", charges_mean), color="red", size=3) +
+  geom_vline(aes(xintercept = charges_median), color="blue") +
+  annotate("text", 
+           x= 17000, 
+           y=0.000065, 
+           label=paste0("Median=", charges_median), color="blue", size=3) +
+  labs(x = "Расходы страховой компании на здоровье застрахованного", y = "Плотность") +
+  facet_grid(. ~ region) +
+  theme_minimal()
+
+facet_plot
+
+ggsave(
+  plot = facet_plot, 
+  "task6.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+```
+
+```{r task 7, echo=FALSE, results='hide',fig.keep='all', warning = FALSE}
+
+
+scat <- cost %>% 
+  ggplot(aes(x=age, y=charges)) + 
+    geom_point(size=1.2) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 14)) +
+  labs(x = "Возраст", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и возраста застрахованного')
+
+scat
+
+ggsave(
+  plot = scat, 
+  "task7.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+```
+
+```{r task 8, echo=FALSE, results='hide',fig.keep='all', warning = FALSE, comment = FALSE}
+
+scat1 <- cost %>% 
+  ggplot(aes(x=age, y=charges)) + 
+    geom_point(size=1.2) +
+  geom_smooth(method=lm) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 14)) +
+  labs(x = "Возраст", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и возраста застрахованного')
+
+scat1
+
+ggsave(
+  plot = scat1, 
+  "task8.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+
+```
+
+```{r task 9, echo=FALSE, results='hide',fig.keep='all', warning = FALSE, comment = FALSE}
+
+
+scat2 <- cost %>% 
+  ggplot(aes(x=age, y=charges, color = smoker, fill = smoker, group = smoker)) + 
+    geom_point(size=1.2, alpha=0.6) +
+  geom_smooth(method=lm , color="black", size = 0.5, se = TRUE, alpha = 0.5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 14)) +
+  labs(x = "Возраст", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и возраста застрахованного')
+
+
+scat2
+
+ggsave(
+  plot = scat2, 
+  "task9.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+```
+
+```{r task 10, echo=FALSE, results='hide',fig.keep='all', warning = FALSE, comment = FALSE}
+
+
+scat3 <- cost %>% 
+  ggplot(aes(x=bmi, y=charges)) + 
+    geom_point(size=1.2) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 14)) +
+  labs(x = "Возраст", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и ИМТ застрахованного')
+
+
+scat4 <- cost %>% 
+  ggplot(aes(x=bmi, y=charges)) + 
+    geom_point(size=1.2) +
+  geom_smooth(method=lm) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 14)) +
+  labs(x = "ИМТ", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и ИМТ застрахованного')
+
+
+
+scat5 <- cost %>% 
+  ggplot(aes(x=bmi, y=charges, color = smoker, fill = smoker, group = smoker)) + 
+    geom_point(size=1.2, alpha=0.7) +
+  geom_smooth(method=lm , color="black", size = 0.5, se = TRUE, alpha = 0.5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 14)) +
+  labs(x = "ИМТ", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и ИМТ застрахованного')
+
+combine_plot_task10 <- ggarrange(scat3, scat4, scat5,
+                          ncol = 1, nrow = 3) 
+ 
+combine_plot_task10
+
+ggsave(
+  plot = combine_plot_task10, 
+  "task10.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+
+```
+# Task 11
+
+Does BMI differ between smokers and non-smokers?
+
+It can be assumed that smokers are slimmer than non-smokers. Let's build boxplots and look at the distributions.
+
+```{r task 11, echo=FALSE, warning = FALSE, comment = FALSE}
+
+viol <- cost %>% 
+ggplot(aes(x = bmi, y = smoker, fill = smoker)) +
+  geom_violin(width=1, alpha=0.5) +
+  geom_boxplot(width=0.2, alpha=0.5) + 
+    theme_bw() +
+  labs(x = "ИМТ", y = "Статус курения") +
+  ggtitle('Отношение статуса курения и ИМТ')
+
+viol
+
+normality_bmi <- cost %>%
+  group_by(smoker) %>%
+  summarise(statistic = shapiro.test(bmi)$statistic, 
+  p.value = shapiro.test(bmi)$p.value)
+
+
+normality_bmi 
+
+shapiro.test(cost$bmi)
+
+wilcox.test(bmi~smoker, data = cost)
+
+ggsave(
+  plot = viol, 
+  "task11.png", 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100) 
+
+```
+Based on the data obtained, it can be concluded that, BMI is similar in smokers and non-smokers. Medians were about 30, Q1 and Q3 are also close. At the same time, in the group of smokers in the form of distribution, the second peak can be noted at the BMI value of 35.
+
+The Wilcoxon test confirmed the conclusion based on the resulting visualization, the p-value was 0.936, the smoking status groups did not differ in BMI.
+
+
+
