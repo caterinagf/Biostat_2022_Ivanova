@@ -1,0 +1,159 @@
+---
+title: "HW2_Visualization"
+author: "Ivanova Ekaterina"
+date: '2022-10-20'
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+library(dplyr)
+#install.packages("skimr")
+library(skimr)
+library(ggplot2)
+#install.packages('ggpubr')
+library(ggpubr)
+library(dplyr)
+library(corrplot)
+library(corrr)
+library(tidyverse)
+library(factoextra)
+library(pheatmap)
+library(knitr)
+```
+
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+
+
+```{r task 1, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+cost <- read.csv("insurance_cost.csv")
+head(cost)
+str(cost)
+
+```
+
+
+```{r task 2, echo=FALSE, message=FALSE, results='hide', warning=FALSE, eval=FALSE}
+
+plot_ly(data = cost,
+        x = ~ bmi,
+        y = ~ charges,
+        color = ~ smoker)
+
+
+
+```
+
+
+```{r task 3, echo=FALSE, message=FALSE, results='hide', warning=FALSE, eval=FALSE}
+
+
+plot1 <- cost %>% 
+  ggplot(aes(x=bmi, y=charges, color=smoker)) + 
+    geom_point(size=1.2) +
+  labs(x = "ИМТ", y = "Расходы страховой") +
+  ggtitle('Отношение расходов страховой и ИМТ застрахованного')
+
+
+ggplotly(plot1)
+
+```
+
+```{r task 4, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+cost_clear <- cost %>% 
+  select(is.integer | is.numeric) 
+
+cost_cor <- cor(cost_clear)
+cost_cor
+
+corrplot(cost_cor, method = 'number')
+
+corrplot(cost_cor, method = 'color')
+
+corrplot(cost_cor, method = 'circle')
+
+corrplot(cost_cor, method = 'shade', order = 'AOE', diag = FALSE)
+
+corrplot(cost_cor, method = 'square', order = 'FPC', type = 'lower', diag = FALSE)
+
+corrplot.mixed(cost_cor, lower = 'shade', upper = 'pie', order = 'hclust')
+
+rplot(cost_cor)
+
+```
+
+
+
+
+```{r task 5, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+cost_dummy <- cost %>% 
+  mutate(
+    gender = ifelse(sex == "female", 1, 0),
+    smoker_stat = ifelse(smoker == "yes", 1, 0),
+    southwest = ifelse(region == "southwest",1,0),
+    southeast = ifelse(region == "southeast",1,0),
+    northwest = ifelse(region == "northwest",1,0),
+    northeast = ifelse(region == "northeast",1,0)
+  )
+
+cost_dummy_clear <- cost_dummy %>%
+  select(is.numeric)
+
+
+```
+
+
+```{r task 6, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+
+cost_dummy_clear <- cost_dummy %>%
+  select(is.numeric)
+
+cost_clear_scaled <- scale(cost_dummy_clear)
+
+cost_clear_dist <- dist(cost_clear_scaled, method = "euclidean")
+
+cost_clear_hc <- hclust(d = cost_clear_dist, 
+                        method = "ward.D2")
+fviz_dend(cost_clear_hc, 
+          cex = 0.1)
+
+```
+
+
+```{r task 7, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+fviz_dend(cost_clear_hc, k = 5, 
+cex = 0.3, # label size
+k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07", "#69E226"),
+color_labels_by_k = TRUE,
+rect = TRUE
+)
+
+
+res.km <- eclust(cost_clear_scaled, "kmeans", k=2)
+
+
+fviz_silhouette(res.km)
+
+```
+```{r task 8, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+
+pheatmap(cost_clear_scaled)
+
+
+```
+
+
+
