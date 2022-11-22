@@ -1,0 +1,139 @@
+---
+title: "HW_Mult_comp"
+author: "Ivanova Ekaterina"
+date: '2022-11-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(pairwiseCI)
+library(flextable)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+soccer_general <- read.csv("soccer.csv", sep=";")[, 2:6] %>% 
+  mutate(Position = as.factor(Position), 
+         Nationality = as.factor(Nationality), 
+         Age = as.numeric(Age), 
+         Height = as.numeric(Height)
+  ) %>% 
+  filter(Nationality %in% c("Spanish", "Italian", "German", "English", "Argentinian")) 
+
+
+set.seed(1) 
+
+soccer_wrk <- soccer_general[sample(1:nrow(soccer_general), 150), ] %>% 
+    mutate(Nationality = factor(Nationality))
+
+```
+
+
+# CI with adjustment
+
+We will construct pairwise 95% confidence intervals for the difference of the averages for the sample and the general population, including with the Bonferroni correction.
+
+All constructed confidence intervals with Bonferroni correction cover the real differences between the height among different pairs of players.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+res_CI_wrk <- as.data.frame(pairwiseCI(Height ~ Position, soccer_wrk)$byout) 
+
+res_CI_wrk %>%
+  mutate(method = NULL) %>%
+  relocate(compnames) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_caption("CI for sample means comparisons") 
+
+
+res_CI_wrk_adj <- as.data.frame(pairwiseCI(Height ~ Position, soccer_wrk, conf.level = 0.975)$byout) 
+
+res_CI_wrk_adj %>%
+  mutate(method = NULL) %>%
+  relocate(compnames) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_caption("CI for means comparisons with Bonferroni correction") 
+
+
+res_CI_gen <- as.data.frame(pairwiseCI(Height ~ Position, soccer_general)$byout) 
+
+
+res_CI_gen %>%
+  mutate(method = NULL) %>%
+  relocate(compnames) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_caption("CI for general population means comparisons") 
+
+
+```
+
+# Pairwise test with adjustment
+
+We will conduct pairwise tests without correction for multiplicity, as well as with the correction of Holm and Benjamin-Hochberg.
+
+Null hypotheses about the equality of averages were rejected for the following pairs (the significance level is 0.05): Forward-Defender, Goalkeeper-Defender, Midfielder-Defender, Goalkeeper-Forward, Midfielder-Goalkeeper. All discoveries are true.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+res_none <- as.tibble(format(round(pairwise.t.test(soccer_wrk$Height, soccer_wrk$Position, p.adjust.method = "none",
+                pool.sd =  FALSE, paired = FALSE,
+                alternative = "two.sided", conf.level = 0.95)$p.value,4), scientific = FALSE))
+
+res_none %>%
+  mutate(Position = c("Forward","Goalkeeper" ,"Midfielder")) %>%
+  relocate(Position) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_caption("Results of pairwise comparisons without correction for multiplicity") 
+
+
+res_holm <- as.tibble(format(round(pairwise.t.test(soccer_wrk$Height, soccer_wrk$Position, p.adjust.method = "holm",
+                pool.sd =  FALSE, paired = FALSE,
+                alternative = "two.sided", conf.level = 0.95)$p.value,4), scientific = FALSE))
+
+res_holm %>%
+  mutate(Position = c("Forward","Goalkeeper" ,"Midfielder")) %>%
+  relocate(Position) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_caption("Results of pairwise comparisons considering Holm correction") 
+
+
+res_BH <- as.tibble(format(round(pairwise.t.test(soccer_wrk$Height, soccer_wrk$Position, p.adjust.method = "BH",
+                pool.sd =  FALSE, paired = FALSE,
+                alternative = "two.sided", conf.level = 0.95)$p.value,4), scientific = FALSE))
+
+res_BH %>%
+  mutate(Position = c("Forward","Goalkeeper" ,"Midfielder")) %>%
+  relocate(Position) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_caption("Results of pairwise comparisons considering Benjamini-Hochberg correction") 
+
+
+```
+
+
+
+
+
+
+
+
+
+```
