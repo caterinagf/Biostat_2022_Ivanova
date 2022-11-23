@@ -1,0 +1,105 @@
+---
+title: "HW_ANOVA"
+author: "Ivanova Ekaterina"
+date: '2022-11-23'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(pairwiseCI)
+library(flextable)
+library(multcomp)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+soccer_general <- read.csv("soccer.csv", sep=";")[, 2:6] %>% 
+  mutate(Position = as.factor(Position), 
+         Nationality = as.factor(Nationality), 
+         Age = as.numeric(Age), 
+         Height = as.numeric(Height)
+  ) %>% 
+  filter(Nationality %in% c("Spanish", "Italian", "German", "English", "Argentinian")) 
+
+
+set.seed(1) 
+
+soccer_wrk <- soccer_general[sample(1:nrow(soccer_general), 150), ] %>% 
+    mutate(Nationality = factor(Nationality))
+
+```
+
+
+# Task 1
+
+Let's produce a standard ANOVA on the sample, the null hypothesis is rejected. Thus, the position on the field is associated with the average height of a football player, since p-value <0.05.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+aov(Height ~ Position, data = soccer_wrk) %>% summary
+
+
+```
+
+# Task 2
+
+A post-hoc analysis was carried out by the Hothorn-Bretz-Westfall method. Statistically significant differences were revealed between the height of the following pairs of players: Goalkeeper-Defender, Midfielder-Defender, Goalkeeper-Forward, Midfielder-Goalkeeper.
+
+The results obtained in this task converge with those obtained in the first HW.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+m0 <- lm(Height ~ Position, data = soccer_wrk)
+HBW.comp <- m0 %>%  glht(linfct = mcp(Position = "Tukey"))
+
+HBW.comp %>% summary()
+
+HBW.comp %>% confint()
+
+par(mar = c(5, 10, 4, 2)+0.1)
+HBW.comp %>% plot(xlab = "Height difference (cm)")
+par(mar = c(5, 10, 4, 2)+0.1)
+
+```
+
+
+# Task 2
+
+Based on variance analysis, it can be concluded that the country of a football player is not associated with the average growth of a football player. Thus, in post-hoc analysis, we should observe confidence intervals that intersect 0.
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+aov(Height ~ Nationality, data = soccer_wrk) %>% summary
+
+
+m1 <- lm(Height ~ Nationality, data = soccer_wrk)
+
+
+HBW.comp1 <- m1 %>%  glht(linfct = mcp(Nationality = "Tukey"))
+
+HBW.comp1 %>% summary()
+
+HBW.comp1 %>% confint()
+
+par(mar = c(5, 10, 4, 2)+0.1)
+HBW.comp1 %>% plot(xlab = "Height difference (cm)")
+par(mar = c(5, 10, 4, 2)+0.1)
+
+```
+
+
+
+
+
